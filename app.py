@@ -25,8 +25,13 @@ def create_worker():
     missing = [f for f in REQUIRED if f not in body]
     if missing:
         return err(f"Missing fields: {', '.join(missing)}", 400)
+<<<<<<< HEAD
     if not isinstance(body["daily_wage"], (int, float)) or not 0 < body["daily_wage"] <= 5000:
         return err("daily_wage must be between 1 and 5000", 400)
+=======
+    if not isinstance(body["daily_wage"], (int, float)) or body["daily_wage"] < 300:
+        return err("daily_wage must be at least 300", 400)
+>>>>>>> e0a9fe8c3eaa754e5483f4d6ec779b579ae17880
     wid = next_id["w"]; next_id["w"] += 1
     code = f"WRK-{wid:03d}"
     workers[wid] = {"id": wid, "code": code, "name": body["name"], "role": body["role"],
