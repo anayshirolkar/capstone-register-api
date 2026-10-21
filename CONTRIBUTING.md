@@ -23,7 +23,7 @@ GitHub Flow is adopted as we have only one release line in our project.
    - what is different from before;
    - why the change was made;
    - any potential caveats;
-
+   
 ## Integrating changes
 - Merge feature branches into `main` using Pull Request after code reviewing.
   Never rebase commits that have been pushed to branch which is shared.
