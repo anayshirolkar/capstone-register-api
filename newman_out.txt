@@ -1,0 +1,74 @@
+newman
+
+Workforce Register API Tests
+
+→ POST - Create worker
+  POST http://127.0.0.1:5000/api/workers [201 CREATED, 283B, 26ms]
+  ✓  Status is 201 Created
+  ✓  Worker code generated as WRK-###
+  ✓  Response echoes request payload
+  ✓  Default site applied
+  ✓  Response time under 500 ms
+
+→ GET - Fetch created worker
+  GET http://127.0.0.1:5000/api/workers/1 [200 OK, 278B, 3ms]
+  ✓  Status is 200 OK
+  ✓  Content-Type is JSON
+  ✓  Returns the same worker id
+  ✓  Schema has required keys
+
+→ GET - List workers filtered by role
+  GET http://127.0.0.1:5000/api/workers?role=Reactor Operator [200 OK, 302B, 3ms]
+  ✓  Status is 200 OK
+  ✓  count matches array length
+  ✓  Every result has the filtered role
+
+→ PUT - Update daily wage
+  PUT http://127.0.0.1:5000/api/workers/1 [200 OK, 278B, 3ms]
+  ✓  Status is 200 OK
+  ✓  Wage updated to 720
+  ✓  Unchanged fields preserved
+
+→ POST - Mark attendance (6 h shift)
+  POST http://127.0.0.1:5000/api/attendance [201 CREATED, 260B, 6ms]
+  ✓  Status is 201 Created
+  ✓  Pay pro-rated: 720 x 6/8 = 540
+
+→ NEG - Create worker with missing fields
+  POST http://127.0.0.1:5000/api/workers [400 BAD REQUEST, 220B, 2ms]
+  ✓  Status is 400 Bad Request
+  ✓  Error names missing fields
+
+→ NEG - Negative wage rejected
+  POST http://127.0.0.1:5000/api/workers [400 BAD REQUEST, 224B, 3ms]
+  ✓  Status is 400 Bad Request
+
+→ DELETE - Remove worker
+  DELETE http://127.0.0.1:5000/api/workers/1 [204 NO CONTENT, 162B, 2ms]
+  ✓  Status is 204 No Content
+  ✓  Empty response body
+
+→ NEG - GET deleted worker returns 404
+  GET http://127.0.0.1:5000/api/workers/1 [404 NOT FOUND, 202B, 3ms]
+  ✓  Status is 404 Not Found
+  ✓  Error message returned
+
+┌─────────────────────────┬─────────────────┬─────────────────┐
+│                         │        executed │          failed │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│              iterations │               1 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│                requests │               9 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│            test-scripts │               9 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│      prerequest-scripts │               0 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│              assertions │              24 │               0 │
+├─────────────────────────┴─────────────────┴─────────────────┤
+│ total run duration: 202ms                                   │
+├─────────────────────────────────────────────────────────────┤
+│ total data received: 680B (approx)                          │
+├─────────────────────────────────────────────────────────────┤
+│ average response time: 5ms [min: 2ms, max: 26ms, s.d.: 7ms] │
+└─────────────────────────────────────────────────────────────┘

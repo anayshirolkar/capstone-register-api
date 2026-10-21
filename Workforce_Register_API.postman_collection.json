@@ -1,0 +1,275 @@
+{
+  "info": {
+    "name": "Workforce Register API Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:5000"
+    },
+    {
+      "key": "workerId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "POST - Create worker",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/workers",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Ramesh Patel\",\n  \"role\": \"Reactor Operator\",\n  \"daily_wage\": 650\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201 Created\", () => pm.response.to.have.status(201));",
+              "const w = pm.response.json();",
+              "pm.test(\"Worker code generated as WRK-###\", () => pm.expect(w.code).to.match(/^WRK-\\d{3}$/));",
+              "pm.test(\"Response echoes request payload\", () => {",
+              "  pm.expect(w.name).to.eql(\"Ramesh Patel\");",
+              "  pm.expect(w.daily_wage).to.eql(650);",
+              "});",
+              "pm.test(\"Default site applied\", () => pm.expect(w.site).to.eql(\"Main Plant\"));",
+              "pm.test(\"Response time under 500 ms\", () => pm.expect(pm.response.responseTime).to.be.below(500));",
+              "pm.collectionVariables.set(\"workerId\", w.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET - Fetch created worker",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/workers/{{workerId}}",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200 OK\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Content-Type is JSON\", () => pm.response.to.have.header(\"Content-Type\", \"application/json\"));",
+              "pm.test(\"Returns the same worker id\", () => pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get(\"workerId\")));",
+              "pm.test(\"Schema has required keys\", () => pm.expect(pm.response.json()).to.have.all.keys(\"id\",\"code\",\"name\",\"role\",\"daily_wage\",\"site\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET - List workers filtered by role",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/workers?role=Reactor Operator",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200 OK\", () => pm.response.to.have.status(200));",
+              "const d = pm.response.json();",
+              "pm.test(\"count matches array length\", () => pm.expect(d.count).to.eql(d.workers.length));",
+              "pm.test(\"Every result has the filtered role\", () => d.workers.forEach(w => pm.expect(w.role).to.eql(\"Reactor Operator\")));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "PUT - Update daily wage",
+      "request": {
+        "method": "PUT",
+        "url": "{{baseUrl}}/api/workers/{{workerId}}",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"daily_wage\": 720\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200 OK\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Wage updated to 720\", () => pm.expect(pm.response.json().daily_wage).to.eql(720));",
+              "pm.test(\"Unchanged fields preserved\", () => pm.expect(pm.response.json().name).to.eql(\"Ramesh Patel\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST - Mark attendance (6 h shift)",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/attendance",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"worker_id\": {{workerId}},\n  \"date\": \"2026-10-20\",\n  \"hours\": 6,\n  \"machine\": \"Reactor R-2\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201 Created\", () => pm.response.to.have.status(201));",
+              "pm.test(\"Pay pro-rated: 720 x 6/8 = 540\", () => pm.expect(pm.response.json().pay).to.eql(540));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "NEG - Create worker with missing fields",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/workers",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"No Role\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400 Bad Request\", () => pm.response.to.have.status(400));",
+              "pm.test(\"Error names missing fields\", () => pm.expect(pm.response.json().error).to.include(\"role\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "NEG - Negative wage rejected",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/workers",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Bad Wage\",\n  \"role\": \"Helper\",\n  \"daily_wage\": -50\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400 Bad Request\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "DELETE - Remove worker",
+      "request": {
+        "method": "DELETE",
+        "url": "{{baseUrl}}/api/workers/{{workerId}}",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 204 No Content\", () => pm.response.to.have.status(204));",
+              "pm.test(\"Empty response body\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "NEG - GET deleted worker returns 404",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/workers/{{workerId}}",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404 Not Found\", () => pm.response.to.have.status(404));",
+              "pm.test(\"Error message returned\", () => pm.expect(pm.response.json().error).to.eql(\"Worker not found\"));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
