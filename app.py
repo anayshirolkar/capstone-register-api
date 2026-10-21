@@ -1,6 +1,5 @@
-"""Workforce Register REST API - worker & attendance tracking for a manufacturing site."""
+"""Workforce Register REST API - tracks workers, wages and daily attendance for a manufacturing site."""
 from flask import Flask, jsonify, request
-
 app = Flask(__name__)
 workers = {}
 attendance = []
