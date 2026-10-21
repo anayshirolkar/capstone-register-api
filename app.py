@@ -1,6 +1,5 @@
-"""Workforce Register REST API - worker & attendance tracking for a manufacturing site."""
+"""Workforce Register REST API - tracks workers, wages and daily attendance for a manufacturing site."""
 from flask import Flask, jsonify, request
-
 app = Flask(__name__)
 workers = {}
 attendance = []
@@ -64,6 +63,12 @@ def mark_attendance():
     next_id["a"] += 1
     attendance.append(rec)
     return jsonify(rec), 201
+
+@app.get("/api/attendance")
+def list_attendance():
+    wid = request.args.get("worker_id", type=int)
+    data = [a for a in attendance if not wid or a["worker_id"] == wid]
+    return jsonify({"count": len(data), "records": data}), 200
 
 if __name__ == "__main__":
     app.run(port=5000)
